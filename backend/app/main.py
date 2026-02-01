@@ -4,9 +4,7 @@ FastAPI application entry point.
 """
 
 from contextlib import asynccontextmanager
-import static_ffmpeg
-# Auto-install/setup ffmpeg paths
-static_ffmpeg.add_paths()
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware

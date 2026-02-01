@@ -24,7 +24,7 @@ qdrant-client>=1.6.0
 
 # Video Processing
 yt-dlp>=2023.11.0
-static-ffmpeg>=2.5
+
 
 
 # Background Tasks
