@@ -18,9 +18,18 @@ async def process_video_task(video_id: str):
         # Get video from database
         video = db.query(Video).filter(Video.id == video_id).first()
         if not video:
-            print(f"[ERROR] Video {video_id} not found")
+            print(f"[ERROR] Video {video_id} not found in database during task start")
             return
         
+        print(f"[*] Task starting for video {video_id}: status={video.status}, path='{video.file_path}'")
+        
+        if not video.file_path:
+             print(f"[WARNING] Video {video_id} has no file path! Attempting to wait and re-fetch...")
+             from asyncio import sleep
+             await sleep(1)
+             db.refresh(video)
+             print(f"[*] After retry: path='{video.file_path}'")
+             
         # Run processing pipeline
         await video_processor.process_video(db, video)
         

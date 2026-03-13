@@ -13,6 +13,7 @@ export interface SearchResult {
 export interface SearchResponse {
     query: string;
     results: SearchResult[];
+    generated_answer?: string | null;
     total_results: number;
     latency_ms: number;
 }

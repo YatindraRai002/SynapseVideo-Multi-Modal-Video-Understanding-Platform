@@ -1,7 +1,9 @@
 
 import subprocess
+import sys
 from pathlib import Path
 import uuid
+from static_ffmpeg import run
 
 from app.config import settings
 
@@ -11,6 +13,7 @@ class ClipGenerator:
     def __init__(self):
         self.clips_dir = Path(settings.base_data_dir) / "clips"
         self.clips_dir.mkdir(parents=True, exist_ok=True)
+        self.ffmpeg_path, _ = run.get_or_fetch_platform_executables_else_raise()
     
     async def generate_clip(
         self,
@@ -28,7 +31,7 @@ class ClipGenerator:
         
         # FFmpeg command for clip extraction
         cmd = [
-            "ffmpeg",
+            self.ffmpeg_path,
             "-i", str(video_path),
             "-ss", str(start_time),
             "-t", str(duration),
@@ -43,7 +46,7 @@ class ClipGenerator:
         if process.returncode != 0:
             # If copy fails, try re-encoding
             cmd = [
-                "ffmpeg",
+                self.ffmpeg_path,
                 "-i", str(video_path),
                 "-ss", str(start_time),
                 "-t", str(duration),
@@ -93,7 +96,7 @@ class ClipGenerator:
         
         # FFmpeg with subtitle filter
         cmd = [
-            "ffmpeg",
+            self.ffmpeg_path,
             "-i", str(video_path),
             "-ss", str(start_time),
             "-t", str(duration),

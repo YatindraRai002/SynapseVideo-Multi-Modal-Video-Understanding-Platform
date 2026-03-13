@@ -5,12 +5,14 @@ FastAPI application entry point.
 
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, Request, status
+from fastapi import FastAPI, Request, status, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from pathlib import Path
+import time
+from collections import defaultdict
 
 from app.config import settings
 from app.core.database import init_db
@@ -53,6 +55,30 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan,
 )
+
+# Rate limiting configuration
+RATE_LIMIT_REQUESTS = 100  # Number of requests
+RATE_LIMIT_WINDOW = 60      # Window in seconds
+client_requests = defaultdict(list)
+
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    """Simple in-memory rate limiting middleware."""
+    client_ip = request.client.host
+    current_time = time.time()
+    
+    # Filter out old requests
+    client_requests[client_ip] = [t for t in client_requests[client_ip] if current_time - t < RATE_LIMIT_WINDOW]
+    
+    if len(client_requests[client_ip]) >= RATE_LIMIT_REQUESTS:
+        return JSONResponse(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            content={"error": "RateLimitExceeded", "message": "Too many requests. Please try again later."}
+        )
+    
+    client_requests[client_ip].append(current_time)
+    response = await call_next(request)
+    return response
 
 # CORS middleware
 app.add_middleware(

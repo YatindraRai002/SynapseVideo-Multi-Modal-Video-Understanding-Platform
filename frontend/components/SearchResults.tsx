@@ -9,9 +9,10 @@ import VideoCard from "./VideoCard";
 interface SearchResultsProps {
     results: SearchResult[];
     loading?: boolean;
+    generatedAnswer?: string | null;
 }
 
-export default function SearchResults({ results, loading }: SearchResultsProps) {
+export default function SearchResults({ results, loading, generatedAnswer }: SearchResultsProps) {
     const [searchStatus, setSearchStatus] = useState<Awaited<ReturnType<typeof getSearchStatus>> | null>(null);
 
     useEffect(() => {
@@ -73,10 +74,26 @@ export default function SearchResults({ results, loading }: SearchResultsProps) 
     }
 
     return (
-        <div className="grid gap-4">
-            {results.map((result, index) => (
-                <VideoCard key={`${result.video_id}-${result.timestamp}-${index}`} result={result} />
-            ))}
+        <div className="grid gap-6">
+            {generatedAnswer && (
+                <div className="bg-gradient-to-br from-blue-900/40 to-purple-900/40 border border-blue-500/30 rounded-2xl p-6 shadow-xl backdrop-blur-sm">
+                    <div className="flex items-center gap-2 mb-4">
+                        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-500/20 text-blue-400">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" /></svg>
+                        </span>
+                        <h3 className="font-semibold text-blue-200">AI Insight</h3>
+                    </div>
+                    <div className="text-gray-200 leading-relaxed whitespace-pre-wrap">
+                        {generatedAnswer}
+                    </div>
+                </div>
+            )}
+
+            <div className="grid gap-4">
+                {results.map((result, index) => (
+                    <VideoCard key={`${result.video_id}-${result.timestamp}-${index}`} result={result} />
+                ))}
+            </div>
         </div>
     );
 }

@@ -38,6 +38,13 @@ class Transcriber:
     def _load_model(self):
         """Lazy load the Whisper model."""
         if self.model is None:
+            import os
+            from static_ffmpeg import run
+            ffmpeg_path, _ = run.get_or_fetch_platform_executables_else_raise()
+            ffmpeg_dir = str(Path(ffmpeg_path).parent)
+            if ffmpeg_dir not in os.environ.get("PATH", ""):
+                os.environ["PATH"] = ffmpeg_dir + os.pathsep + os.environ.get("PATH", "")
+                
             print(f"Loading Whisper model '{self.model_name}' on {self.device}...")
             self.model = whisper.load_model(self.model_name, device=self.device)
             print("Whisper model loaded!")
@@ -45,16 +52,55 @@ class Transcriber:
     async def transcribe(self, audio_path: Path, language: str = None) -> List[TranscriptionSegment]:
         """
         Transcribe audio file with timestamps.
-        
-        Args:
-            audio_path: Path to audio file
-            language: Optional language code (auto-detect if None)
-            
-        Returns:
-            List of TranscriptionSegment objects with timestamps
+        Try Groq API first for speed, fallback to local Whisper.
         """
+        # Try Groq first if API key is available
+        if settings.groq_api_key:
+            try:
+                from groq import Groq
+                print(f"[*] Using Groq API for transcription: {audio_path.name}")
+                client = Groq(api_key=settings.groq_api_key)
+                
+                with open(audio_path, "rb") as file:
+                    transcription = client.audio.transcriptions.create(
+                        file=(audio_path.name, file.read()),
+                        model="whisper-large-v3",
+                        response_format="verbose_json",
+                        language=language
+                    )
+                
+                segments = []
+                # Handle both dict and object responses from groq client
+                segments_data = getattr(transcription, 'segments', [])
+                if not segments_data and isinstance(transcription, dict):
+                    segments_data = transcription.get('segments', [])
+                
+                for seg in segments_data:
+                    # Handle if seg is a dict or object
+                    if isinstance(seg, dict):
+                        segment = TranscriptionSegment(
+                            text=seg.get("text", "").strip(),
+                            start=seg.get("start", 0.0),
+                            end=seg.get("end", 0.0)
+                        )
+                    else:
+                        segment = TranscriptionSegment(
+                            text=getattr(seg, "text", "").strip(),
+                            start=getattr(seg, "start", 0.0),
+                            end=getattr(seg, "end", 0.0)
+                        )
+                    segments.append(segment)
+                
+                print(f"[+] Groq transcription complete: {len(segments)} segments")
+                return segments
+                
+            except Exception as e:
+                print(f"[!] Groq transcription failed: {e}. Falling back to local Whisper...")
+
+        # Local Fallback
         self._load_model()
         
+        print(f"[*] Using local Whisper for transcription: {audio_path.name}")
         # Transcribe with word-level timestamps
         result = self.model.transcribe(
             str(audio_path),

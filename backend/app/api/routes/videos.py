@@ -27,14 +27,7 @@ from app.workers.pipeline import process_video_task
 router = APIRouter()
 
 
-def run_async_task(coro):
-    """Helper to run async task in background."""
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    try:
-        loop.run_until_complete(coro)
-    finally:
-        loop.close()
+# Removed run_async_task helper - utilizing native BackgroundTasks
 
 
 @router.post("/upload", response_model=VideoResponse)
@@ -54,6 +47,19 @@ async def upload_video(
         raise HTTPException(
             status_code=400,
             detail=f"Invalid file type. Allowed: {', '.join(allowed_types)}"
+        )
+    
+    # Validate file size (e.g., 500MB limit)
+    MAX_FILE_SIZE = 500 * 1024 * 1024  # 500MB
+    # We check the size by seeking to the end or using the file descriptor if available
+    file.file.seek(0, 2)
+    file_size = file.file.tell()
+    file.file.seek(0)
+    
+    if file_size > MAX_FILE_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large. Maximum size is 500MB."
         )
     
     # Generate unique ID and file path
@@ -77,7 +83,7 @@ async def upload_video(
     db.commit()
     db.refresh(video)
     
-    background_tasks.add_task(run_async_task, process_video_task(video_id))
+    background_tasks.add_task(process_video_task, video_id)
     
     return video
 
@@ -144,7 +150,7 @@ async def upload_video_url(
         finally:
             db_session.close()
     
-    background_tasks.add_task(run_async_task, download_and_process())
+    background_tasks.add_task(download_and_process)
     
     return video
 
@@ -268,6 +274,6 @@ async def retry_video(
     db.refresh(video)
     
     # Trigger processing
-    background_tasks.add_task(run_async_task, process_video_task(video_id))
+    background_tasks.add_task(process_video_task, video_id)
     
     return video

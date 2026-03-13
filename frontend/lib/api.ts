@@ -1,7 +1,7 @@
 import { SearchResponse, VideoListResponse, Video, TranslateResponse } from "./types";
 
-export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-export const BACKEND_BASE = API_BASE.replace(/\/api\/v1\/?$/, "") || "http://localhost:8000";
+export const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8888/api/v1";
+export const BACKEND_BASE = API_BASE.replace(/\/api\/v1\/?$/, "") || "http://localhost:8888";
 
 // Search status (diagnostic: Qdrant + video statuses)
 export async function getSearchStatus(): Promise<{

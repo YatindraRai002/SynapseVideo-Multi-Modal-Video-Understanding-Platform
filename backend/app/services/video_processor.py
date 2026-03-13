@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Optional
 import uuid
 import sys
+from static_ffmpeg import run
 
 from app.config import settings
 
@@ -40,6 +41,9 @@ class VideoProcessor:
         self.frame_extractor = FrameExtractor()
         self.embedder = Embedder()
         self.vector_store = VectorStore()
+        
+        # Initialize binaries
+        self.ffmpeg_path, self.ffprobe_path = run.get_or_fetch_platform_executables_else_raise()
     
     async def download_youtube(self, url: str, video_id: str) -> Path:
         """
@@ -59,6 +63,7 @@ class VideoProcessor:
             "-f", "bestvideo[height<=720]+bestaudio/best[height<=720]",
             "--merge-output-format", "mp4",
             "-o", str(output_path),
+            "--ffmpeg-location", self.ffmpeg_path,
             url
         ]
         
@@ -77,7 +82,7 @@ class VideoProcessor:
             dict with duration, width, height, fps, etc.
         """
         cmd = [
-            "ffprobe",
+            self.ffprobe_path,
             "-v", "quiet",
             "-print_format", "json",
             "-show_format",
@@ -126,10 +131,15 @@ class VideoProcessor:
         5. Store in vector database
         """
         video_id = video.id
+        
+        # Robust path resolution
+        if not video.file_path:
+             raise Exception(f"Video file path is empty in database for video: {video.title}")
+             
         video_path = Path(video.file_path)
         
-        if not video_path.exists():
-            raise Exception(f"Video file not found: {video_path}")
+        if not video_path.exists() or video_path.is_dir():
+            raise Exception(f"Video file not found or is a directory: {video_path}")
         
         print(f"[*] Starting processing for: {video.title}")
         

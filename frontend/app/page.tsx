@@ -9,6 +9,7 @@ import { API_BASE } from "@/lib/api";
 
 export default function Home() {
   const [results, setResults] = useState<SearchResult[]>([]);
+  const [generatedAnswer, setGeneratedAnswer] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
 
@@ -22,9 +23,11 @@ export default function Home() {
       if (!res.ok) throw new Error("Search failed");
       const data = await res.json();
       setResults(data.results);
+      setGeneratedAnswer(data.generated_answer);
     } catch (error) {
       console.error("Search error:", error);
       setResults([]);
+      setGeneratedAnswer(null);
     } finally {
       setLoading(false);
     }
@@ -54,7 +57,7 @@ export default function Home() {
 
           <div className="w-full max-w-5xl pb-10">
             {hasSearched && (
-              <SearchResults results={results} loading={loading} />
+              <SearchResults results={results} loading={loading} generatedAnswer={generatedAnswer} />
             )}
           </div>
         </div>

@@ -34,6 +34,7 @@ class Settings(BaseSettings):
     whisper_model: str = "small"  # tiny, base, small, medium, large
     clip_model: str = "ViT-B/32"
     text_embedding_model: str = "all-MiniLM-L6-v2"
+    groq_api_key: str | None = None
     
     # Processing Settings
     frame_extraction_fps: float = 1.0  # frames per second
@@ -47,8 +48,9 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     
     class Config:
-        env_file = ".env"
+        env_file = Path(__file__).resolve().parent.parent.parent / ".env"
         case_sensitive = False
+        extra = "ignore"
 
 
 @lru_cache()

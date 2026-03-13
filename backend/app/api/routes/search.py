@@ -11,16 +11,69 @@ import time
 
 from app.core.database import get_db
 from app.config import settings
-from app.models.video import Video
+from app.models.video import Video, TranscriptSegment, Frame
 from app.models.schemas import SearchRequest, SearchResponse, SearchResultItem
 from app.services.embedder import Embedder
 from app.services.vector_store import VectorStore
+from app.services.rag_service import rag_service
 
 router = APIRouter()
 
 # Initialize services
 embedder = Embedder()
 vector_store = VectorStore()
+
+
+async def perform_sql_search(db: Session, query: str, video_id: Optional[str], limit: int, search_type: str):
+    """Fallback keyword search using SQL when vector store is unavailable."""
+    results = []
+    
+    # Keyword search on transcripts
+    if search_type in ["transcript", "hybrid"]:
+        stmt = db.query(TranscriptSegment)
+        if video_id:
+            stmt = stmt.filter(TranscriptSegment.video_id == video_id)
+        
+        segments = stmt.filter(TranscriptSegment.text.ilike(f"%{query}%")).limit(limit).all()
+        for s in segments:
+            results.append(SearchResultItem(
+                video_id=s.video_id,
+                video_title=s.video.title if s.video else "Unknown",
+                timestamp=s.start_time,
+                end_time=s.end_time,
+                transcript_snippet=s.text,
+                score=0.5,  # Static score for keyword match
+                match_type="transcript"
+            ))
+            
+    # Keyword search on frames
+    if search_type in ["frames", "hybrid"]:
+        stmt = db.query(Frame)
+        if video_id:
+            stmt = stmt.filter(Frame.video_id == video_id)
+            
+        frames = stmt.filter(Frame.caption.ilike(f"%{query}%")).limit(limit).all()
+        for f in frames:
+            # Convert full path to URL path
+            frame_path_url = None
+            if f.file_path:
+                try:
+                    rel = Path(f.file_path).relative_to(settings.frames_dir)
+                    frame_path_url = str(rel).replace("\\", "/")
+                except (ValueError, TypeError):
+                    frame_path_url = Path(f.file_path).name
+            
+            results.append(SearchResultItem(
+                video_id=f.video_id,
+                video_title=f.video.title if f.video else "Unknown",
+                timestamp=f.timestamp,
+                frame_path=frame_path_url,
+                frame_caption=f.caption,
+                score=0.5,
+                match_type="frame"
+            ))
+            
+    return results
 
 
 @router.get("/", response_model=SearchResponse)
@@ -108,15 +161,23 @@ async def search(
         results = results[:limit]
         
     except Exception as e:
-        print(f"Search error: {e}")
-        # Return empty results on error
-        results = []
+        print(f"Search warning (Vector Store failed): {e}")
+        # Fallback to SQL keyword search
+        try:
+            results = await perform_sql_search(db, q, video_id, limit, search_type)
+        except Exception as sql_e:
+            print(f"SQL search fallback failed: {sql_e}")
+            results = []
     
     latency_ms = (time.time() - start_time) * 1000
+    
+    # Generate RAG answer
+    generated_answer = await rag_service.generate_answer(q, results) if results else None
     
     return SearchResponse(
         query=q,
         results=results,
+        generated_answer=generated_answer,
         total_results=len(results),
         latency_ms=latency_ms
     )
@@ -200,14 +261,23 @@ async def search_post(
         results = results[:limit]
         
     except Exception as e:
-        print(f"Search error: {e}")
-        results = []
+        print(f"Search warning (Vector Store failed): {e}")
+        # Fallback to SQL keyword search
+        try:
+            results = await perform_sql_search(db, request.query, video_id, limit, search_type)
+        except Exception as sql_e:
+            print(f"SQL search fallback failed: {sql_e}")
+            results = []
     
     latency_ms = (time.time() - start_time) * 1000
+    
+    # Generate RAG answer
+    generated_answer = await rag_service.generate_answer(request.query, results) if results else None
     
     return SearchResponse(
         query=request.query,
         results=results,
+        generated_answer=generated_answer,
         total_results=len(results),
         latency_ms=latency_ms
     )

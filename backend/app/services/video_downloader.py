@@ -1,10 +1,12 @@
 
 
 import subprocess
+import sys
 import uuid
 from pathlib import Path
 from typing import Optional, Dict, Any
 import json
+from static_ffmpeg import run
 
 from app.config import settings
 
@@ -15,6 +17,7 @@ class VideoDownloader:
     def __init__(self):
         self.download_dir = settings.upload_dir
         self.download_dir.mkdir(parents=True, exist_ok=True)
+        self.ffmpeg_path, _ = run.get_or_fetch_platform_executables_else_raise()
     
     async def download(
         self,
@@ -38,7 +41,7 @@ class VideoDownloader:
         
         # yt-dlp command
         cmd = [
-            "yt-dlp",
+            sys.executable, "-m", "yt_dlp",
             url,
             "-o", str(output_path),
             "-f", "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
@@ -46,6 +49,7 @@ class VideoDownloader:
             "--no-playlist",  # Don't download playlists
             "--print-json",   # Output video info as JSON
             "--no-simulate",  # Actually download
+            "--ffmpeg-location", self.ffmpeg_path
         ]
         
         process = subprocess.run(cmd, capture_output=True, text=True)

@@ -1,18 +1,19 @@
 
 
 import subprocess
+import sys
 from pathlib import Path
 import uuid
+from static_ffmpeg import run
 
 from app.config import settings
 
 
 class AudioExtractor:
-   
-    
     def __init__(self):
         self.audio_dir = Path(settings.audio_dir)
         self.audio_dir.mkdir(parents=True, exist_ok=True)
+        self.ffmpeg_path, self.ffprobe_path = run.get_or_fetch_platform_executables_else_raise()
     
     async def extract_audio(
         self,
@@ -26,7 +27,7 @@ class AudioExtractor:
         
         if format == "wav":
             cmd = [
-                "ffmpeg",
+                self.ffmpeg_path,
                 "-i", str(video_path),
                 "-vn",
                 "-acodec", "pcm_s16le",
@@ -37,7 +38,7 @@ class AudioExtractor:
             ]
         else:
             cmd = [
-                "ffmpeg",
+                self.ffmpeg_path,
                 "-i", str(video_path),
                 "-vn",
                 "-q:a", "0",  # Best quality
@@ -55,7 +56,7 @@ class AudioExtractor:
     def get_audio_duration(self, audio_path: Path) -> float:
         """Get duration of audio file in seconds."""
         cmd = [
-            "ffprobe",
+            self.ffprobe_path,
             "-v", "quiet",
             "-show_entries", "format=duration",
             "-of", "csv=p=0",

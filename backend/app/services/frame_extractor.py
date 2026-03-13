@@ -4,10 +4,12 @@ Extracts frames from videos using FFmpeg with scene detection.
 """
 
 import subprocess
+import sys
 from pathlib import Path
 from typing import List, Tuple
 import cv2
 import numpy as np
+from static_ffmpeg import run
 
 from app.config import settings
 
@@ -28,6 +30,7 @@ class FrameExtractor:
         self.frames_dir = Path(settings.frames_dir)
         self.frames_dir.mkdir(parents=True, exist_ok=True)
         self.fps = settings.frame_extraction_fps
+        self.ffmpeg_path, _ = run.get_or_fetch_platform_executables_else_raise()
     
     async def extract_frames_fixed_interval(
         self,
@@ -53,7 +56,7 @@ class FrameExtractor:
         # FFmpeg command for frame extraction
         output_pattern = str(output_dir / "frame_%05d.jpg")
         cmd = [
-            "ffmpeg",
+            self.ffmpeg_path,
             "-i", str(video_path),
             "-vf", f"fps={fps}",
             "-q:v", "2",  # High quality JPEG
@@ -156,7 +159,7 @@ class FrameExtractor:
         
         output_pattern = str(output_dir / "frame_%05d.jpg")
         cmd = [
-            "ffmpeg",
+            self.ffmpeg_path,
             "-i", str(video_path),
             "-vf", "select='eq(pict_type,I)'",
             "-vsync", "vfr",
