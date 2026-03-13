@@ -1,5 +1,5 @@
 """
-ClipCompass - Video-Context Search Engine
+SynapseVideo - Multi-Modal Video Understanding Platform
 FastAPI application entry point.
 """
 
@@ -17,7 +17,7 @@ from collections import defaultdict
 from app.config import settings
 from app.core.database import init_db
 from app.core.logger import get_logger
-from app.core.exceptions import ClipCompassException
+from app.core.exceptions import GroqSightException
 from app.api.routes import videos, search, clips, asr
 
 logger = get_logger(__name__)
@@ -27,7 +27,7 @@ logger = get_logger(__name__)
 async def lifespan(app: FastAPI):
     """Application lifecycle management."""
     # Startup
-    logger.info("Starting ClipCompass...")
+    logger.info("Starting SynapseVideo...")
     
     # Initialize database
     try:
@@ -45,7 +45,7 @@ async def lifespan(app: FastAPI):
     yield
     
     # Shutdown
-    logger.info("Shutting down ClipCompass...")
+    logger.info("Shutting down SynapseVideo...")
 
 
 # Create FastAPI app
@@ -101,8 +101,8 @@ app.include_router(asr.router, prefix=f"{settings.api_prefix}/asr", tags=["ASR (
 
 
 # Exception handlers
-@app.exception_handler(ClipCompassException)
-async def clipcompass_exception_handler(request: Request, exc: ClipCompassException):
+@app.exception_handler(SynapseVideoException)
+async def synapsevideo_exception_handler(request: Request, exc: SynapseVideoException):
     """Handle custom application exceptions."""
     logger.error(f"Application error: {exc.message}", extra={"details": exc.details})
     return JSONResponse(

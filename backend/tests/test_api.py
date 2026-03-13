@@ -1,11 +1,12 @@
 """
-Test suite for ClipCompass API endpoints.
+Test suite for SynapseVideo API endpoints.
 Run with: pytest
 """
 
 import pytest
 from httpx import AsyncClient
 from app.main import app
+from app.core.exceptions import SynapseVideoException
 
 
 @pytest.mark.asyncio
@@ -15,7 +16,7 @@ async def test_root_endpoint():
         response = await client.get("/")
         assert response.status_code == 200
         data = response.json()
-        assert data["name"] == "ClipCompass"
+        assert data["name"] == "SynapseVideo"
         assert "status" in data
         assert data["status"] == "running"
 

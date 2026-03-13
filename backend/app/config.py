@@ -10,7 +10,7 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     # Application
-    app_name: str = "ClipCompass"
+    app_name: str = "SynapseVideo"
     debug: bool = False
     api_prefix: str = "/api/v1"
     

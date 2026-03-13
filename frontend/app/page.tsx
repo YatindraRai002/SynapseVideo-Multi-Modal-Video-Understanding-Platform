@@ -43,7 +43,7 @@ export default function Home() {
           {!hasSearched && (
             <div className="text-center space-y-4 mb-8">
               <h1 className="text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-600">
-                ClipCompass
+                SynapseVideo
               </h1>
               <p className="text-gray-400 text-lg max-w-xl mx-auto">
                 Search through your videos using natural language. Find exact moments, spoken words, or visual scenes instantly.

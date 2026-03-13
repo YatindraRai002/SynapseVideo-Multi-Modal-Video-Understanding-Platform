@@ -1,5 +1,5 @@
 """
-Centralized logging configuration for ClipCompass backend.
+Centralized logging configuration for SynapseVideo backend.
 """
 
 import logging

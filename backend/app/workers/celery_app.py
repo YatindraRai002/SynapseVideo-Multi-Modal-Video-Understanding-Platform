@@ -1,5 +1,5 @@
 """
-Celery application configuration for ClipCompass.
+Celery application configuration for SynapseVideo.
 Handles background video processing tasks.
 """
 
@@ -8,7 +8,7 @@ from app.config import settings
 
 # Create Celery app
 celery_app = Celery(
-    "clipcompass",
+    "SynapseVideo",
     broker=settings.redis_url,
     backend=settings.redis_url,
 )

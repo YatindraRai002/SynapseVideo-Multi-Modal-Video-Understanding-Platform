@@ -6,8 +6,8 @@ import { cn } from "@/lib/utils";
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "VoiceRAG Studio",
-  description: "AI-powered Voice RAG Chatbot",
+  title: "SynapseVideo",
+  description: "Multi-Modal Video Understanding Platform",
 };
 
 export default function RootLayout({
