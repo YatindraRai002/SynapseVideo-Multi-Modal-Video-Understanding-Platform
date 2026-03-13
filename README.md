@@ -1,7 +1,7 @@
+# SynapseVideo 🚀
+### Multi-Modal Video Understanding Platform
 
-### Elite Multi-Modal Video-Context Search Engine
-
-ClipCompass is a production-ready **Multi-Modal RAG system** that ingests videos (YouTube, Local uploads), synchronizes audio transcripts with visual frame embeddings, and enables natural language search across both modalities.
+SynapseVideo is a production-ready **Multi-Modal RAG system** that ingests videos (YouTube, Local uploads), synchronizes audio transcripts with visual frame embeddings, and enables natural language search across both modalities.
 
 **Project Status**: Technical Completion Achieved ✅
 
@@ -9,7 +9,7 @@ ClipCompass is a production-ready **Multi-Modal RAG system** that ingests videos
 
 ## ⚡ Why This Project Stands Out
 
-Most RAG systems only handle text. **ClipCompass** tackles the harder problem: **synchronizing unstructured multi-modal data**.
+Most RAG systems only handle text. **GroqSight** tackles the harder problem: **synchronizing unstructured multi-modal data**.
 - **Instant Transcription**: Powered by **Groq Whisper-large-v3**. Processing that used to take minutes now completes in **seconds**.
 - **Visual Intelligence**: Uses **Salesforce BLIP** to understand not just what's in a frame, but the *context* of the scene.
 - **Unstoppable Search**: Employs a **SQL Hybrid Fallback**. If your vector database (Qdrant) is offline, the system automatically switches to keyword matching.
@@ -56,7 +56,7 @@ Create a `.env` file in the project root:
 ```env
 GROQ_API_KEY=your_key_here
 QDRANT_HOST=localhost
-DATABASE_URL=sqlite:///./clipcompass.db
+DATABASE_URL=sqlite:///./groqsight.db
 ```
 
 ### 3. Run Backend
@@ -258,11 +258,11 @@ Built with:
 ---
 
 **Built to demonstrate mastery of complex, unstructured data pipelines** 🎯
-# ClipCompass Architecture
+# GroqSight Architecture
 
 ## System Overview
 
-ClipCompass is a **Multi-Modal Video-Context Search Engine** that enables natural language search across both audio transcripts and visual frames in video content. The system demonstrates advanced engineering capabilities in handling unstructured, multi-modal data pipelines.
+GroqSight is a **Multi-Modal Video-Context Search Engine** that enables natural language search across both audio transcripts and visual frames in video content. The system demonstrates advanced engineering capabilities in handling unstructured, multi-modal data pipelines.
 
 ---
 
@@ -574,7 +574,7 @@ CREATE TABLE frames (
 
 ## Comparison: Text RAG vs. Video RAG
 
-| Aspect | Text RAG | Video RAG (ClipCompass) |
+| Aspect | Text RAG | Video RAG (GroqSight) |
 |--------|----------|-------------------------|
 | **Input** | Documents (PDF, TXT) | Videos (MP4, YouTube) |
 | **Modalities** | Single (text) | Dual (audio + visual) |
@@ -589,7 +589,7 @@ CREATE TABLE frames (
 
 ## Conclusion
 
-ClipCompass demonstrates:
+GroqSight demonstrates:
 1. **Multi-modal data handling**: Audio + visual synchronization
 2. **Production-ready pipeline**: Async processing, error handling, progress tracking
 3. **Scalable architecture**: Vector DB, background tasks, API design
