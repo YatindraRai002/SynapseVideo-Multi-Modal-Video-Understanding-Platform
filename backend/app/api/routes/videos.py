@@ -274,6 +274,33 @@ async def retry_video(
     db.refresh(video)
     
     # Trigger processing
-    background_tasks.add_task(process_video_task, video_id)
+    if video.source_url and not video.file_path:
+        async def download_and_process_retry():
+            from app.core.database import SessionLocal
+            db_session = SessionLocal()
+            try:
+                from app.services.video_downloader import video_downloader
+                v = db_session.query(Video).filter(Video.id == video_id).first()
+                v.status = "downloading"
+                db_session.commit()
+                
+                info = await video_downloader.download(v.source_url, video_id)
+                v.file_path = info["file_path"]
+                v.duration_seconds = info.get("duration")
+                v.status = VideoStatus.PENDING.value
+                db_session.commit()
+                
+                await process_video_task(video_id)
+            except Exception as e:
+                v = db_session.query(Video).filter(Video.id == video_id).first()
+                if v:
+                    v.status = VideoStatus.FAILED.value
+                    v.error_message = str(e)
+                    db_session.commit()
+            finally:
+                db_session.close()
+        background_tasks.add_task(download_and_process_retry)
+    else:
+        background_tasks.add_task(process_video_task, video_id)
     
     return video

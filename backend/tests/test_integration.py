@@ -1,7 +1,4 @@
-"""
-Integration tests for video processing pipeline.
-Tests the complete video upload -> processing -> search workflow.
-"""
+
 
 import pytest
 import time

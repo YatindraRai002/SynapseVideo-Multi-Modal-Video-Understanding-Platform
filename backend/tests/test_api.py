@@ -1,7 +1,4 @@
-"""
-Test suite for SynapseVideo API endpoints.
-Run with: pytest
-"""
+
 
 import pytest
 from httpx import AsyncClient

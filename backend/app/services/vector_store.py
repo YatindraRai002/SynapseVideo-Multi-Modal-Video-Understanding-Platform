@@ -118,13 +118,14 @@ class VectorStore:
         Returns:
             List of generated point IDs
         """
+        point_ids = [str(uuid.uuid4()) for _ in segments]
+
+        if not self.is_connected or self.client is None:
+            print("[WARN] Qdrant not available - skipping transcript embedding storage")
+            return point_ids
+
         points = []
-        point_ids = []
-        
-        for i, (embedding, segment) in enumerate(zip(embeddings, segments)):
-            point_id = str(uuid.uuid4())
-            point_ids.append(point_id)
-            
+        for point_id, (embedding, segment) in zip(point_ids, zip(embeddings, segments)):
             points.append(PointStruct(
                 id=point_id,
                 vector=embedding.tolist(),
@@ -138,10 +139,13 @@ class VectorStore:
                 }
             ))
         
-        self.client.upsert(
-            collection_name=self.transcript_collection,
-            points=points
-        )
+        try:
+            self.client.upsert(
+                collection_name=self.transcript_collection,
+                points=points
+            )
+        except Exception as e:
+            print(f"[WARN] Failed to upsert transcript embeddings: {e}")
         
         return point_ids
     
@@ -162,13 +166,14 @@ class VectorStore:
         Returns:
             List of generated point IDs
         """
+        point_ids = [str(uuid.uuid4()) for _ in frames]
+
+        if not self.is_connected or self.client is None:
+            print("[WARN] Qdrant not available - skipping frame embedding storage")
+            return point_ids
+
         points = []
-        point_ids = []
-        
-        for i, (embedding, frame) in enumerate(zip(embeddings, frames)):
-            point_id = str(uuid.uuid4())
-            point_ids.append(point_id)
-            
+        for point_id, (embedding, frame) in zip(point_ids, zip(embeddings, frames)):
             points.append(PointStruct(
                 id=point_id,
                 vector=embedding.tolist(),
@@ -181,10 +186,13 @@ class VectorStore:
                 }
             ))
         
-        self.client.upsert(
-            collection_name=self.frame_collection,
-            points=points
-        )
+        try:
+            self.client.upsert(
+                collection_name=self.frame_collection,
+                points=points
+            )
+        except Exception as e:
+            print(f"[WARN] Failed to upsert frame embeddings: {e}")
         
         return point_ids
     
@@ -282,6 +290,10 @@ class VectorStore:
 
     async def delete_video_embeddings(self, video_id: str):
         """Delete all embeddings for a video."""
+        if not self.is_connected or self.client is None:
+            print("[WARN] Qdrant not available - skipping embedding deletion")
+            return
+
         filter_condition = Filter(
             must=[FieldCondition(
                 key="video_id",
@@ -289,12 +301,14 @@ class VectorStore:
             )]
         )
         
-        self.client.delete(
-            collection_name=self.transcript_collection,
-            points_selector=filter_condition
-        )
-        
-        self.client.delete(
-            collection_name=self.frame_collection,
-            points_selector=filter_condition
-        )
+        try:
+            self.client.delete(
+                collection_name=self.transcript_collection,
+                points_selector=filter_condition
+            )
+            self.client.delete(
+                collection_name=self.frame_collection,
+                points_selector=filter_condition
+            )
+        except Exception as e:
+            print(f"[WARN] Failed to delete embeddings: {e}")

@@ -18,15 +18,25 @@ ENV/
 # Environment
 .env
 .env.local
+.env.*.local
 
 # Database
 *.db
 *.sqlite3
 
-# Data directories
-data/videos/
-data/frames/
-data/audio/
+# Data directories (videos, frames, audio)
+data/
+
+# Partial / temporary downloads
+*.part
+*.ytdl
+*.tmp
+
+# Video files accidentally placed outside data/
+backend/*.mp4
+backend/*.mkv
+backend/*.webm
+backend/*.avi
 
 # ML Models (downloaded automatically)
 models/
@@ -44,8 +54,13 @@ node_modules/
 .next/
 out/
 build/
+dist/
 
 # Testing
 .pytest_cache/
 .coverage
 htmlcov/
+coverage/
+
+# Autoresearch sub-repo (managed separately)
+autoresearch/

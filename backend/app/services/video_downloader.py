@@ -49,6 +49,7 @@ class VideoDownloader:
             "--no-playlist",  # Don't download playlists
             "--print-json",   # Output video info as JSON
             "--no-simulate",  # Actually download
+            "--extractor-args", "youtube:player_client=android,web",
             "--ffmpeg-location", self.ffmpeg_path
         ]
         

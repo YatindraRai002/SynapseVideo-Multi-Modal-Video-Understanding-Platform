@@ -1,4 +1,3 @@
-"""Simple script to run the uvicorn server."""
 import uvicorn
 
 if __name__ == "__main__":

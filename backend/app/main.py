@@ -17,7 +17,7 @@ from collections import defaultdict
 from app.config import settings
 from app.core.database import init_db
 from app.core.logger import get_logger
-from app.core.exceptions import GroqSightException
+from app.core.exceptions import SynapseVideoException
 from app.api.routes import videos, search, clips, asr
 
 logger = get_logger(__name__)
